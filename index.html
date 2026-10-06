@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>message-for-you</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            color: white;
+            font-size: 55px;
+            margin-bottom: 45px;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.25);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        button {
+            border: none;
+            padding: 18px 42px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        #yesBtn {
+            background: #28a745;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #yesBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #noBtn {
+            background: #dc3545;
+            color: white;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #success {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            text-align: center;
+            width: 100%;
+        }
+
+        #success h2 {
+            font-size: 100px;
+            color: white;
+            margin: 0;
+            font-weight: 900;
+            text-shadow:
+                0 0 10px white,
+                0 0 20px #ff1493,
+                0 0 40px #ff1493,
+                0 0 80px #ff1493;
+            animation: pulse 1s infinite alternate;
+        }
+
+        #success p {
+            color: white;
+            font-size: 30px;
+            margin-top: 25px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.1);
+            }
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 5;
+            animation: floatUp 4s linear forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100vh) scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 38px;
+            }
+
+            button {
+                padding: 15px 30px;
+                font-size: 18px;
+            }
+
+            #success h2 {
+                font-size: 60px;
+            }
+
+            #success p {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" id="questionContainer">
+        <h1>Would you be my DATE? 💕</h1>
+
+        <div class="buttons">
+            <button id="yesBtn">YES 💖</button>
+            <button id="noBtn">NO 😭</button>
+        </div>
+    </div>
+
+    <div id="success">
+        <h2>IT'S A YES! 💖</h2>
+        <p>You just made my day! 🥰</p>
+    </div>
+
+    <canvas id="fireworks"></canvas>
+
+    <audio id="music" src="Kenny Rogers - You Decorated My Life (lyrics)-[AudioTrimmer.com].mp3"></audio>
+
+    <script>
+        const noBtn = document.getElementById("noBtn");
+
+        noBtn.addEventListener("click", function () {
+            const maxX = window.innerWidth - noBtn.offsetWidth;
+            const maxY = window.innerHeight - noBtn.offsetHeight;
+
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+
+            noBtn.style.position = "fixed";
+            noBtn.style.left = randomX + "px";
+            noBtn.style.top = randomY + "px";
+        });
+
+        const yesBtn = document.getElementById("yesBtn");
+        const questionContainer = document.getElementById("questionContainer");
+        const success = document.getElementById("success");
+        const music = document.getElementById("music");
+
+        yesBtn.addEventListener("click", function () {
+            questionContainer.style.display = "none";
+            success.style.display = "block";
+
+            music.currentTime = 0;
+            music.play();
+
+            startFireworks();
+            startHearts();
+        });
+
+        const canvas = document.getElementById("fireworks");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener("resize", function () {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        let particles = [];
+
+        function createFirework() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height * 0.6;
+
+            for (let i = 0; i < 90; i++) {
+                const angle = (Math.PI * 2 * i) / 90;
+                const speed = Math.random() * 7 + 3;
+
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    alpha: 1,
+                    size: Math.random() * 3 + 1,
+                    hue: Math.random() * 360
+                });
+            }
+        }
+
+        function animateFireworks() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(function (particle, index) {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.05;
+                particle.alpha -= 0.012;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    particle.x,
+                    particle.y,
+                    particle.size,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fillStyle =
+                    "hsla(" +
+                    particle.hue +
+                    ", 100%, 60%, " +
+                    particle.alpha +
+                    ")";
+
+                ctx.fill();
+
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        function startFireworks() {
+            createFirework();
+
+            setInterval(function () {
+                createFirework();
+            }, 500);
+
+            animateFireworks();
+        }
+
+        function createHeart() {
+            const heart = document.createElement("div");
+
+            heart.classList.add("heart");
+
+            heart.innerHTML =
+                Math.random() > 0.5 ? "💖" : "💕";
+
+            heart.style.left =
+                Math.random() * 100 + "vw";
+
+            heart.style.bottom = "-50px";
+
+            heart.style.fontSize =
+                Math.random() * 30 + 20 + "px";
+
+            document.body.appendChild(heart);
+
+            setTimeout(function () {
+                heart.remove();
+            }, 4000);
+        }
+
+        function startHearts() {
+            setInterval(function () {
+                createHeart();
+            }, 300);
+        }
+    </script>
+
+</body>
+</html>
